@@ -21,41 +21,15 @@
   * 2. Add some text over image hard coded  **DONE**
   * 3. Read whether title hidden from banner item
   * 3. Read text over image from Banner item
-  * 4. Read image from banner item (may need to go early)
+  * 4. Read image from banner item (may need to go early)  **DONE**
   * 5. Double check positioning of text
   * 6. Allow text to be placed elsewhere in the image
   ****/
 
 // TEMPLATES  TODO
 
-// Define the wrapper around the card interface
-
-function newBanner($){
-	/* define variables based on Bb page type */
-	/* used to identify important components in html */
-	var tweak_bb_active_url_pattern = "listContent.jsp";
-	window.tweak_bb = { display_view: (location.href.indexOf(tweak_bb_active_url_pattern) > 0 ), 
-          page_id: "#content_listContainer",
-	      row_element: "li" };
-	 
-	 if (location.href.indexOf("listContent.jsp") > 0) {
-	     // hide the tweak code element
-         $(".gutweak").parents("li").hide(); 
-         // hide the title bar - but only when not editing
-         $("#pageTitleBar").hide();
-	 }
-
-    
-    // and just hide the banner for now
-    // ?? What are you trying to do here david?
-    // Leave for now
-    $("#banner").hide(); 
-    
-    // Add hard coded text
-    // - will need to add another image with a div as first thin in pageTitleDiv
-    
-    var text= `
-    <style>
+var bannerTemplate = `
+<style>
     /* Container holding the image and the text */
 .container {
   position: relative;
@@ -98,26 +72,53 @@ function newBanner($){
   left: 50%;
   transform: translate(-50%, -50%);
 }</style>
-    <div class="my_banner_container">
-  <img src="{PIC_URL}" alt="Banner Image TODO" style="width:100%;">
-  <div class="bottom-right"><h3 style="color:white;font-size:3em;background-color:coral">Bachelor of Creative Industries</h3></div>
+  <div class="my_banner_container container mx-auto rounded">
+  <img class="rounded-lg" src="{PIC_URL}" alt="Banner Image TODO" style="width:100%;">
+  <div class="bottom-right p-2 bg-orange-light xl:text-3xl lg:text-2xl md:text-lg sm:text-base rounded"><h3 style="text-shadow: 0px 2px 3px #555">{BANNER_TEXT}</h3></div>
 </div>
-    `;
+`;
+
+// Define the wrapper around the card interface
+
+function newBanner($){
+	/* define variables based on Bb page type */
+	/* used to identify important components in html */
+	var tweak_bb_active_url_pattern = "listContent.jsp";
+	window.tweak_bb = { display_view: (location.href.indexOf(tweak_bb_active_url_pattern) > 0 ), 
+          page_id: "#content_listContainer",
+	      row_element: "li" };
+	 
+	 if (location.href.indexOf("listContent.jsp") > 0) {
+	     // hide the tweak code element
+         $(".gutweak").parents("li").hide(); 
+         // hide the title bar - but only when not editing
+         $("#pageTitleBar").hide();
+	 } else {
+	     return false;
+	 }
+
+    
+    // and just hide the banner for now
+    // ?? What are you trying to do here david?
+    // Leave for now
+    $("#banner").hide(); 
+    
+    // Add hard coded text
+    // - will need to add another image with a div as first thin in pageTitleDiv
+    
+    var text= bannerTemplate;
     
     // TODO: use this to get the banner item
     // -- this gets the <h3> tag
-    var bannerDetails = $(tweak_bb.page_id +" > "+tweak_bb.row_element).find(".item h3").filter(':contains("Banner")').eq(0);
- 		
-    console.log( "Early banner details " + bannerDetails.html());
- 	if ( bannerDetails.length === 0){
- 	    return false;
- 	}
+    	
+    
     /* get the details about the banner */
 	var details = getBannerDetails($);
 
    console.log(" pic url is " + details["picUrl"]);
 
     text = text.replace( "{PIC_URL}", details["picUrl"]);
+    text = text.replace( "{BANNER_TEXT}", details["bannerText"]);
     $("#pageTitleDiv").prepend(text);
  	
 	/* generate the cards interface for the tiems */
@@ -133,70 +134,41 @@ function newBanner($){
  */
 
 function getBannerDetails($) {
+    
+    // Do we have some banner details?
+	var bannerDetails = $(tweak_bb.page_id +" > "+tweak_bb.row_element).find(".item h3").filter(':contains("Banner")').parent().parent();
 	
-	// Get the image URL
-	var bannerDetails = $(tweak_bb.page_id +" > "+tweak_bb.row_element).find(".item h3").filter(':contains("Banner")').parent().parent().children(".details").children('.vtbegenerated').find('img');
-	//** need to get class vtbegenerated
+    $(bannerDetails).hide();
 	
-	// sort of like the following
-/*		var cards = jQuery(tweak_bb.page_id + " > " +tweak_bb.row_element).children(".details").children('.vtbegenerated').filter(":contains('Card Image:')");*/
+ 	console.log( "Early banner details " + bannerDetails.html());
+ 	if ( bannerDetails.length === 0){
+ 	    // Nope, go home empty
+ 	    return false;
+ 	}
  	
- 	console.log("bannerDetails X " + $(bannerDetails).html());
- 	
-    //var inlineImage = $(bannerDetails).find('img');//==, 'Banner');
-    var inlineImage = bannerDetails ; //$("[title='Banner']");
+	// Yes, Get the image URL
+	var bannerDetails = jQuery(tweak_bb.page_id +" > "+tweak_bb.row_element).find(".item h3").filter(':contains("Banner")').parent().parent().children(".details").children('.vtbegenerated').find('img');
+	
+	// get the banner text
+	var heading = jQuery(tweak_bb.page_id +" > "+tweak_bb.row_element).find(".item h3").filter(':contains("Banner")').find("span")[2];
+	bannerText = $(heading).html();
+	// remove the Banner prelim
+	bannerText = bannerText.replace( /^Banner  */, "");
+	
+    var inlineImage = bannerDetails ;
     var item;
     
+    // if we found an image
 	if (inlineImage.length) {
+	        // return the item details
 	        picUrl=inlineImage[0].src;
-	        console.log("item url " + picUrl + " html" + inlineImage[0].outerHTML);
-	        //description = description.replace(inlineImage[0].outerHTML,"");
-	        // Bb also adds stuff when images inserted, remove it from 
-	        // description to be placed into card
-	        //var bb = $.parseHTML(description);
-	        // This will find the class
-	        //stringToRemove = $(description).find('.contextMenuContainer'//).parent().clone().html();
-	        
-	        //description = description.replace( stringToRemove, '');
-	        
-	        item = { picUrl: picUrl }
+	        item = { picUrl: picUrl, bannerText:bannerText }
 	        
 	        
 	    } else { console.log("NO IMAGE FOUND") }
-	//console.log("Banner image " + bannerImage.html());
+	
 	
  	return item;
-	    // Parse the description and remove the Card Image data	    
-	/*    var description = $(this).html(),picUrl;
-	    m = description.match(/[Cc]ard [Ii]mage *: *([^\s<]*)/ );
-	    if (m) {
-    	    picUrl=m[1];
-	        description = description.replace( m[0], "");
-	    }*/
-	    
-	    // Check to see if an image with title "Card Image" has been inserted
-	    /*var inlineImage = $(this).find('img').attr('title', 'Card Image');
-	    if (inlineImage.length) {
-	        picUrl=inlineImage[0].src;
-	        //console.log("item html" + inlineImage[0].outerHTML);
-	        description = description.replace(inlineImage[0].outerHTML,"");
-	        // Bb also adds stuff when images inserted, remove it from 
-	        // description to be placed into card
-	        var bb = $.parseHTML(description);
-	        // This will find the class
-	        stringToRemove = $(description).find('.contextMenuContainer').parent().clone().html();
-	        
-	        description = description.replace( stringToRemove, '');
-	    }
-	    */
-	    
-	    // save the item for later
-	/* var item = {BANNER:imageUrl, HIDE_PAGE_TITLE:hidePageTitle, 
-	          BANNER_TEXT:bannerText,BANNER_LOCATION:bannerLocation }; */
-	        //link:link,month:month,date:date,label:label,dateLabel:dateLabel};
-	
-//	return item;
-    return "true";
 }
 
 /****
