@@ -37,8 +37,9 @@ function newBanner($){
 	window.tweak_bb = { display_view: (location.href.indexOf(tweak_bb_active_url_pattern) > 0 ), 
           page_id: "#content_listContainer",
 	      row_element: "li" };
-	      
+	 
 	 if (location.href.indexOf("listContent.jsp") > 0) {
+	     // hide the tweak code element
          $(".gutweak").parents("li").hide(); 
          // hide the title bar - but only when not editing
          $("#pageTitleBar").hide();
@@ -46,7 +47,9 @@ function newBanner($){
 
     
     // and just hide the banner for now
-    $("#banner").hide(); // not working
+    // ?? What are you trying to do here david?
+    // Leave for now
+    $("#banner").hide(); 
     
     // Add hard coded text
     // - will need to add another image with a div as first thin in pageTitleDiv
@@ -96,47 +99,83 @@ function newBanner($){
   transform: translate(-50%, -50%);
 }</style>
     <div class="my_banner_container">
-  <img src="https://bblearn-blaed.griffith.edu.au/bbcswebdav/pid-4313769-dt-content-rid-47523913_1/xid-47523913_1" alt="Snow" style="width:100%;">
+  <img src="{PIC_URL}" alt="Banner Image TODO" style="width:100%;">
   <div class="bottom-right"><h3 style="color:white;font-size:3em;background-color:coral">Bachelor of Creative Industries</h3></div>
 </div>
     `;
-    $("#pageTitleDiv").prepend(text);
     
     // TODO: use this to get the banner item
-    //var cardInterface = jQuery(tweak_bb.page_id +" > "+tweak_bb.row_element//).find(".item h3").filter(':contains("Card Interface")').eq(0);
+    // -- this gets the <h3> tag
+    var bannerDetails = $(tweak_bb.page_id +" > "+tweak_bb.row_element).find(".item h3").filter(':contains("Banner")').eq(0);
+ 		
+    console.log( "Early banner details " + bannerDetails.html());
+ 	if ( bannerDetails.length === 0){
+ 	    return false;
+ 	}
+    /* get the details about the banner */
+	var details = getBannerDetails($);
+
+   console.log(" pic url is " + details["picUrl"]);
+
+    text = text.replace( "{PIC_URL}", details["picUrl"]);
+    $("#pageTitleDiv").prepend(text);
  	
- 	//if ( cardInterface.length === 0){
- 	  //  return false;
- 	//}
-    /* Get the titles and descriptions of the items on the page */
-	//var items = getCardItems($);
-	
 	/* generate the cards interface for the tiems */
-	//addCardInterface(items);
+	//addBanner(details);
 }
 
 /***
- * Extract an array of items from the page that have been specified as part 
- * of the card interface
+ * Extract the details about the banner and pass back as a dict with fields
+ * - BANNER - the URL for the banner
+ * - HIDE_PAGE_TITLE - boolean
+ * - BANNER_TEXT - the text/html to be displayed
+ * - BANNER_LOCATION - class for where the BANNER_TEXT should be placed
  */
 
-function getCardItems($) {
-	// Find all the items that containg Card Image: ??
-	var cards = jQuery(tweak_bb.page_id + " > " +tweak_bb.row_element).children(".details").children('.vtbegenerated').filter(":contains('Card Image:')");
-	var items=[];
+function getBannerDetails($) {
 	
-	// Loop through each card and construct the items array with card data
-	cards.each( function(idx){
-        // Parse the description and remove the Card Image data	    
-	    var description = $(this).html(),picUrl;
+	// Get the image URL
+	var bannerDetails = $(tweak_bb.page_id +" > "+tweak_bb.row_element).find(".item h3").filter(':contains("Banner")').parent().parent().children(".details").children('.vtbegenerated').find('img');
+	//** need to get class vtbegenerated
+	
+	// sort of like the following
+/*		var cards = jQuery(tweak_bb.page_id + " > " +tweak_bb.row_element).children(".details").children('.vtbegenerated').filter(":contains('Card Image:')");*/
+ 	
+ 	console.log("bannerDetails X " + $(bannerDetails).html());
+ 	
+    //var inlineImage = $(bannerDetails).find('img');//==, 'Banner');
+    var inlineImage = bannerDetails ; //$("[title='Banner']");
+    var item;
+    
+	if (inlineImage.length) {
+	        picUrl=inlineImage[0].src;
+	        console.log("item url " + picUrl + " html" + inlineImage[0].outerHTML);
+	        //description = description.replace(inlineImage[0].outerHTML,"");
+	        // Bb also adds stuff when images inserted, remove it from 
+	        // description to be placed into card
+	        //var bb = $.parseHTML(description);
+	        // This will find the class
+	        //stringToRemove = $(description).find('.contextMenuContainer'//).parent().clone().html();
+	        
+	        //description = description.replace( stringToRemove, '');
+	        
+	        item = { picUrl: picUrl }
+	        
+	        
+	    } else { console.log("NO IMAGE FOUND") }
+	//console.log("Banner image " + bannerImage.html());
+	
+ 	return item;
+	    // Parse the description and remove the Card Image data	    
+	/*    var description = $(this).html(),picUrl;
 	    m = description.match(/[Cc]ard [Ii]mage *: *([^\s<]*)/ );
 	    if (m) {
     	    picUrl=m[1];
 	        description = description.replace( m[0], "");
-	    }
+	    }*/
 	    
 	    // Check to see if an image with title "Card Image" has been inserted
-	    var inlineImage = $(this).find('img').attr('title', 'Card Image');
+	    /*var inlineImage = $(this).find('img').attr('title', 'Card Image');
 	    if (inlineImage.length) {
 	        picUrl=inlineImage[0].src;
 	        //console.log("item html" + inlineImage[0].outerHTML);
@@ -149,49 +188,15 @@ function getCardItems($) {
 	        
 	        description = description.replace( stringToRemove, '');
 	    }
+	    */
 	    
-	    // Parse the date for commencing
-	    var month,date,m = description.match(/[Cc]ard [Dd]ate *: *([A-Za-z]*) ([0-9]*)/);
-	    if (m) {
-    	    month=m[1];
-    	    date=m[2];
-    	    description = description.replace(m[0],"");
-	    }
-	    
-	    // See if there's a different label for date
-	    m = description.match(/[Cc]ard [Dd]ate [Ll]abel *: ([^<]*)/);
-	    var dateLabel='Commencing';
-	    if (m) {
-	        dateLabel=m[1];
-	        description = description.replace( m[0], "");
-	    }
-	    
-	    // See if the Course Label should be changed
-	    var label="Module";
-	    m = description.match(/[Cc]ard [Ll]abel *: *([^<]*)/ );
-	    if (m) {
-	        label=m[1];
-	        description = description.replace( m[0], "");
-	    }
-	    
-	    // need to get back to the header which is up one div, a sibling, then span
-	    var header = $(this).parent().siblings(".item").find("span")[2];
-	    var title = $(header).html(),link;
-	    link = $(header).parent('a').attr('href');
-	    
-	    // Hide the contentItem  TODO Only do this if display page
-	    var tweak_bb_active_url_pattern = "listContent.jsp";
-	    if (location.href.indexOf(tweak_bb_active_url_pattern) > 0 ) { 
-	        $(this).parent().parent().hide();
-	        //console.log( "content item " + contentItem.html());
-	    }
 	    // save the item for later
-	    var item = {title:title, picUrl:picUrl, description:description,
-	        link:link,month:month,date:date,label:label,dateLabel:dateLabel};
-	    items.push(item);
-	});
+	/* var item = {BANNER:imageUrl, HIDE_PAGE_TITLE:hidePageTitle, 
+	          BANNER_TEXT:bannerText,BANNER_LOCATION:bannerLocation }; */
+	        //link:link,month:month,date:date,label:label,dateLabel:dateLabel};
 	
-	return items;
+//	return item;
+    return "true";
 }
 
 /****
