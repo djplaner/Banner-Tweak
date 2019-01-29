@@ -26,9 +26,12 @@
   * 6. Allow text to be placed elsewhere in the image
   ****/
 
-// TEMPLATES  TODO
+// TEMPLATES  
 
-var bannerTemplate = `
+var bannerTemplate = Array(4);
+const ORIGINAL=0, TAILWIND=1, EXPERIMENT=2, TAILWIND_X=3;
+
+bannerTemplate[ORIGINAL]= `
 <style>
     /* Container holding the image and the text */
 .container {
@@ -73,11 +76,62 @@ var bannerTemplate = `
   transform: translate(-50%, -50%);
 }</style>
   <div class="my_banner_container container mx-auto rounded">
-  <img class="rounded-lg" src="{PIC_URL}" alt="Banner Image TODO" style="width:100%;">
+  <img class="rounded-lg object-contain" src="{PIC_URL}" alt="Banner Image TODO" style="width:100%;">
   <div class="bottom-right p-2 bg-orange-light xl:text-3xl lg:text-2xl md:text-lg sm:text-base rounded"><h3 style="text-shadow: 0px 2px 3px #555">{BANNER_TEXT}</h3></div>
 </div>
 `;
 
+bannerTemplate[TAILWIND] = `
+<style>
+.object-fit-fill {
+  object-fit: fill;
+}
+
+.object-fit-contain {
+  object-fit: contain;
+}
+
+.object-fit-cover {
+  object-fit: cover;
+}
+
+.object-fit-none {
+  object-fit: none;
+}
+
+.object-fit-scale-down {
+  object-fit: scale-down;
+}
+</style>
+<section class="relative px-2">
+  <div class="z-20 relative text-white container bg-transparent flex items-end">
+    <h1 class="mb-4 bg-orange-light pin-r pin-b">{BANNER_TEXT}</h1>
+  </div>
+  <div class="absolute pin h-auto z-10">
+    <img src="{PIC_URL}" alt="" class="h-full w-full object-fit-cover">
+  </div>
+</section>
+
+`;
+
+bannerTemplate[EXPERIMENT] = `
+<div class="container mx-auto rounded">
+<div class="bottom-right p-2 bg-orange-light xl:text-3xl lg:text-2xl md:text-lg sm:text-base rounded"><h3 style="text-shadow: 0px 2px 3px #555">{BANNER_TEXT}</h3></div>
+  <img class="rounded-lg object-contain" class="object-cover" src="{PIC_URL}" alt="Banner Image TODO" style="width:100%;">
+  
+</div>
+`;
+
+bannerTemplate[TAILWIND_X] = `
+<section class="relative px-2">
+  <div class="z-20 relative text-white container bg-transparent border-transparent flex items-end">
+    <h1 class="mb-4 bg-orange-light pin-r pin-b">{BANNER_TEXT}</h1>
+  </div>
+  <div class="absolute pin h-auto z-10">
+    <img src="{PIC_URL}" alt="" class="h-full w-full">
+  </div>
+</section>
+`;
 // Define the wrapper around the card interface
 
 function newBanner($){
@@ -106,7 +160,7 @@ function newBanner($){
     // Add hard coded text
     // - will need to add another image with a div as first thin in pageTitleDiv
     
-    var text= bannerTemplate;
+    var text= bannerTemplate[TAILWIND_X];
     
     // TODO: use this to get the banner item
     // -- this gets the <h3> tag
